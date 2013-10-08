@@ -62,7 +62,7 @@ public class MadeInNYC {
 		//skip first item (and every other item) because it is a node containing main website and hiring links
 		Element check = null;
 		
-		//while (iterator.hasNext()){
+		while (iterator.hasNext()){
 			String jobText= iterator.next().text().replaceAll("[(hiring)]","");
 			System.out.println("jobtext = " + jobText);
 			check = (iterator.hasNext())?iterator.next():check;
@@ -76,7 +76,7 @@ public class MadeInNYC {
 			result.add(check);
 			
 			//check = (iterator.hasNext())?iterator.next():check;
-		//}
+		}
 
 		ListIterator<Element> resultIterator = result.listIterator();
 	
