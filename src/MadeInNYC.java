@@ -1,7 +1,9 @@
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.regex.Pattern;
+
 
 
 
@@ -16,12 +18,15 @@ public class MadeInNYC {
 	
 	private static String html = "http://nytm.org/made-in-nyc/";
 	public Elements companiesHiring;
-	
+	private ArrayList <Company> companyList;
+
 	public MadeInNYC()
 	{
+		companyList = new ArrayList<Company>();
 		companiesHiring = parseHiring();
 	}
 	
+	//Check made-in-nyc site and pulls out the body of links
 	private Elements parseHiring()
 	{
 		Document doc = null;
@@ -29,34 +34,23 @@ public class MadeInNYC {
 			doc = Jsoup.connect(html).timeout(0).get();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			System.out.println ("failure");
+			System.out.println ("Made In NYC Site is down.");
 			e.printStackTrace();
 		}
 		Element body = doc.body();
-		
 		//Find the article tag
 		Element article = body.getElementsByTag("article").first();
-		
-		return article.children();
-		
-		//return article.getElementsContainingText("hiring"); 
+		return article.children();	 
 	}
 	
+	//Takes the list of links of companies in place from website.  Then gets only the ones hiring.
 	private void parseCompanies()
 	{
 		Elements links = companiesHiring.select("li");
-		//Elements hiringLinks = companiesHiring.first().getElementsContainingOwnText("(hiring)");
-		Elements hiringLinks = links.select("li:contains(hiring)");
-		//System.out.println (hiringLinks);
-		//System.out.println (companiesHiring.first().children().get(3));
-		
+		Elements hiringLinks = links.select("li:contains(hiring)");	
 		companiesHiring = hiringLinks;
-	}
 
-	private void strip404()
-	{
-		Elements result = new Elements();
-		Elements hiringLinks = companiesHiring.select(":contains(hiring)");
+		hiringLinks = companiesHiring.select(":contains(hiring)");
 		ListIterator<Element> iterator = hiringLinks.listIterator();
 		
 		//skip first item (and every other item) because it is a node containing main website and hiring links
@@ -64,36 +58,42 @@ public class MadeInNYC {
 		
 		while (iterator.hasNext()){
 			String jobText= iterator.next().text().replaceAll("[(hiring)]","");
-			System.out.println("jobtext = " + jobText);
 			check = (iterator.hasNext())?iterator.next():check;
 			
 			String link = getLink(check);
-			System.out.println ("Checking: " + link);
 			if (checkLinkStatus(link))
 				iterator.remove();
-			
-			check.text(jobText);
-			result.add(check);
-			
-			//check = (iterator.hasNext())?iterator.next():check;
+			else
+			{
+				check.text(jobText);
+				companyList.add(new Company (link,jobText));
+			}
 		}
-
-		ListIterator<Element> resultIterator = result.listIterator();
-	
-		//Output results of the application to log
-		while (resultIterator.hasNext()){
-			Element output =resultIterator.next();
-			System.out.print("<li>");
-			System.out.print ("<a href=\""+getLink(output)+"\" target=\"_blank\">" + 
-			output.select("a").text()+ "</a>");
-			System.out.println ("</li>");
-		}
-		
+		outputCompanyList();
 	}
 	
+	//Prints out the companylist
+	private void outputCompanyList()
+	{
+		for (Company c: companyList)
+		{
+			System.out.print("<li>");
+			System.out.print ("<a href=\""+c.jobUrl+"\" target=\"_blank\">" + 
+			c.name+ "</a>");
+			System.out.println ("</li>");
+		}
+	}
+	
+	//Get the url out of an element
 	private String getLink(Element linkElement)
 	{
+		try{
 		return (linkElement.select("a").first()).attr("abs:href");
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 	
 	//Check if a URL returns a 404
@@ -120,16 +120,9 @@ public class MadeInNYC {
 		} 
 		return (false);
 	}
-	
-	private Company parseCompany(){
-		return new Company();
-	}
-	
-	
+		
 	public static void main(String[] args) {
 		MadeInNYC search = new MadeInNYC();
-		search.parseCompanies();
-		search.strip404();
-		//System.out.println ("Link is 404 " + search.check404("http://www.admeld.com/about/jobs/"));
+		search.parseCompanies();	
 	}
 }
