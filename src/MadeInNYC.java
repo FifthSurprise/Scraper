@@ -1,11 +1,7 @@
-import java.io.IOException;
+import java.io.*;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.ListIterator;
-import java.util.regex.Pattern;
-
-
-
 
 import javax.net.ssl.SSLHandshakeException;
 
@@ -19,11 +15,77 @@ public class MadeInNYC {
 	private static String html = "http://nytm.org/made-in-nyc/";
 	public Elements companiesHiring;
 	private ArrayList <Company> companyList;
-
+	private String fileSaveName= "companies.ser";
+		
 	public MadeInNYC()
 	{
 		companyList = new ArrayList<Company>();
-		companiesHiring = parseHiring();
+		if (loadData())
+		{
+			outputCompanyList();
+		}
+		//populate companiesHiring with latest Made in NYC values
+		else
+		{
+			companiesHiring = parseHiring();
+			parseCompanies();
+		}
+	}
+	
+	//Saves the list of companies to a serialized file
+	private void saveData()
+	{
+		File output = new File(fileSaveName);
+		try {
+			boolean bool = output.createNewFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try
+		{
+			FileOutputStream fileOut = new FileOutputStream(output);
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(companyList);
+			out.close();
+			fileOut.close();
+			System.out.println ("Saved data in: " + fileSaveName);
+		}
+		catch(IOException i )
+		{
+			i.printStackTrace();
+		}
+	}
+	
+	//Attempts to load data from a serialized file.  If failure, generates file
+	@SuppressWarnings("unchecked")
+	private boolean loadData()
+	{
+		try
+	      {
+	         FileInputStream fileIn = new FileInputStream(fileSaveName);
+	         ObjectInputStream in = new ObjectInputStream(fileIn);
+	         companyList = (ArrayList <Company>) in.readObject();
+	         in.close();
+	         fileIn.close();
+	         return true;
+	      }
+			catch(FileNotFoundException f)
+			{
+				System.out.println ("Attempt load but could not find file");				
+				return false;
+			}
+			catch(IOException i)
+	      {
+	         i.printStackTrace();
+	         return false;
+	      }catch(ClassNotFoundException c)
+	      {
+	         System.out.println("Company class not found");
+	         c.printStackTrace();
+	         return false;
+	      }
 	}
 	
 	//Check made-in-nyc site and pulls out the body of links
@@ -57,7 +119,7 @@ public class MadeInNYC {
 		Element check = null;
 		
 		while (iterator.hasNext()){
-			String jobText= iterator.next().text().replaceAll("[(hiring)]","");
+			String jobText= iterator.next().text().replaceAll("\\(hiring\\)","");
 			check = (iterator.hasNext())?iterator.next():check;
 			
 			String link = getLink(check);
@@ -66,20 +128,21 @@ public class MadeInNYC {
 			else
 			{
 				check.text(jobText);
+				//System.out.println ("Adding " + jobText + " at " + link);
 				companyList.add(new Company (link,jobText));
 			}
 		}
-		outputCompanyList();
+		saveData();
 	}
 	
 	//Prints out the companylist
-	private void outputCompanyList()
+	public void outputCompanyList()
 	{
 		for (Company c: companyList)
 		{
 			System.out.print("<li>");
-			System.out.print ("<a href=\""+c.jobUrl+"\" target=\"_blank\">" + 
-			c.name+ "</a>");
+			System.out.print ("<a href=\""+c.getJobUrl()+"\" target=\"_blank\">" + 
+			c.getName()+ "</a>");
 			System.out.println ("</li>");
 		}
 	}
@@ -99,9 +162,8 @@ public class MadeInNYC {
 	//Check if a URL returns a 404
 	private boolean checkLinkStatus(String link)
 	{
-		Connection.Response response = null;
 		try {
-			response = Jsoup.connect(link).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21").timeout(10000).ignoreHttpErrors(true).execute();
+			Jsoup.connect(link).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21").timeout(10000).ignoreHttpErrors(true).execute();
 		}
 		catch(UnknownHostException exception)
 		{
@@ -123,6 +185,7 @@ public class MadeInNYC {
 		
 	public static void main(String[] args) {
 		MadeInNYC search = new MadeInNYC();
-		search.parseCompanies();	
+		System.out.println ("Completed");
+		//search.outputCompanyList();
 	}
 }
