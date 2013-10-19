@@ -1,9 +1,8 @@
 import java.io.*;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
-import javax.net.ssl.SSLHandshakeException;
+import javafx.collections.ObservableList;
 
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
@@ -15,6 +14,7 @@ public class MadeInNYC {
 	private static String html = "http://nytm.org/made-in-nyc/";
 	public Elements companiesHiring;
 	private ArrayList <Company> companyList;
+	private ObservableList<ObsCompany> obsCompanylist;
 	private String fileSaveName= "companies.ser";
 		
 	public MadeInNYC()
@@ -123,7 +123,7 @@ public class MadeInNYC {
 			check = (iterator.hasNext())?iterator.next():check;
 			
 			String link = getLink(check);
-			if (checkLinkStatus(link))
+			if (ScraperHelper.checkLinkStatus(link))
 				iterator.remove();
 			else
 			{
@@ -158,34 +158,9 @@ public class MadeInNYC {
 			return null;
 		}
 	}
-	
-	//Check if a URL returns a 404
-	private boolean checkLinkStatus(String link)
-	{
-		try {
-			Jsoup.connect(link).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21").timeout(10000).ignoreHttpErrors(true).execute();
-		}
-		catch(UnknownHostException exception)
-		{
-			System.out.println ("Unknown Host Exception for " + link);
-			return (true);
-		}
-		catch (SSLHandshakeException exception2)
-		{
-			System.out.println ("SSLHandshakeException for " + link);
-			return (true);
-		}
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			System.out.println ("Some other failure for " + link);
-			return(true);
-		} 
-		return (false);
-	}
 		
 	public static void main(String[] args) {
 		MadeInNYC search = new MadeInNYC();
 		System.out.println ("Completed");
-		//search.outputCompanyList();
 	}
 }
