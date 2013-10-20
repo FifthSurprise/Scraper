@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Scraper
+Bundle-SymbolicName: Scraper
+Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: Scraper.jar,
+ Kevin/Desktop/Coding/jsoup-1.7.2.jar
+Export-Package: .,
+ res
+Import-Package: javafx.util;version="2.2.0"

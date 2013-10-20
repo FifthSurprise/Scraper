@@ -23,10 +23,6 @@ public class JobScraperGUI extends Application {
 	private ObservableList<ObsCompany> data;
 	private MadeInNYC source = new MadeInNYC();
 
-	public JobScraperGUI() {
-
-	}
-
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -180,6 +176,7 @@ public class JobScraperGUI extends Application {
 		vbox.setSpacing(5);
 		vbox.setPadding(new Insets(10, 10, 10, 10));
 
+		//main button list
 		final HBox hbox = new HBox();
 		hbox.setSpacing(5);
 		hbox.setPadding(new Insets(10, 10, 10, 10));

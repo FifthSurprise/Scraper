@@ -1,9 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.ListIterator;
-
-import javafx.collections.ObservableList;
-
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,17 +9,16 @@ import org.jsoup.select.Elements;
 public class MadeInNYC {
 
 	public boolean debug = false;
-
 	private static String html = "http://nytm.org/made-in-nyc/";
 	public Elements companiesHiring;
 	public ArrayList<Company> companyList;
-	private ObservableList<ObsCompany> obsCompanylist;
-	private String fileSaveName = "src/companies.ser";
-
+	private String fileSaveName = "./companies.ser";
+		
 	public MadeInNYC() {
+		//path  = ClassLoader.getResource(fileSaveName);
 		companyList = new ArrayList<Company>();
 		if (loadData()) {
-			//outputCompanyList();
+			if (debug)outputCompanyList();
 		}
 		// populate companiesHiring with latest Made in NYC values
 		else {
@@ -51,14 +47,14 @@ public class MadeInNYC {
 	public void saveData() {
 		File output = new File(fileSaveName);
 		try {
-			boolean bool = output.createNewFile();
+			output.createNewFile();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		try {
 			FileOutputStream fileOut = new FileOutputStream(output);
+
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(companyList);
 			out.close();
@@ -177,10 +173,5 @@ public class MadeInNYC {
 		} catch (Exception e) {
 			return null;
 		}
-	}
-
-	public static void main(String[] args) {
-		MadeInNYC search = new MadeInNYC();
-		System.out.println("Completed");
 	}
 }
