@@ -1,9 +1,8 @@
 import java.io.*;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
-import javax.net.ssl.SSLHandshakeException;
+import javafx.collections.ObservableList;
 
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
@@ -11,30 +10,45 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class MadeInNYC {
-	
+
+	public boolean debug = false;
+
 	private static String html = "http://nytm.org/made-in-nyc/";
 	public Elements companiesHiring;
-	private ArrayList <Company> companyList;
-	private String fileSaveName= "companies.ser";
-		
-	public MadeInNYC()
-	{
+	public ArrayList<Company> companyList;
+	private ObservableList<ObsCompany> obsCompanylist;
+	private String fileSaveName = "src/companies.ser";
+
+	public MadeInNYC() {
 		companyList = new ArrayList<Company>();
-		if (loadData())
-		{
+		if (loadData()) {
 			outputCompanyList();
 		}
-		//populate companiesHiring with latest Made in NYC values
-		else
-		{
+		// populate companiesHiring with latest Made in NYC values
+		else {
 			companiesHiring = parseHiring();
 			parseCompanies();
 		}
 	}
-	
-	//Saves the list of companies to a serialized file
-	private void saveData()
-	{
+
+	// Try to delete file
+	public void delete() {
+		try {
+			File file = new File(fileSaveName);
+			if (file.exists()) {
+				if (file.delete()) {
+					System.out.println(file.getName() + " is deleted!");
+				} else {
+					System.out.println("Delete operation is failed.");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	// Saves the list of companies to a serialized file
+	public void saveData() {
 		File output = new File(fileSaveName);
 		try {
 			boolean bool = output.createNewFile();
@@ -42,150 +56,131 @@ public class MadeInNYC {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		try
-		{
+
+		try {
 			FileOutputStream fileOut = new FileOutputStream(output);
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(companyList);
 			out.close();
 			fileOut.close();
-			System.out.println ("Saved data in: " + fileSaveName);
-		}
-		catch(IOException i )
-		{
+			System.out.println("Saved data in: " + fileSaveName);
+		} catch (IOException i) {
 			i.printStackTrace();
 		}
 	}
-	
-	//Attempts to load data from a serialized file.  If failure, generates file
+
+	// Attempts to load data from a serialized file. If failure, generates file
 	@SuppressWarnings("unchecked")
-	private boolean loadData()
-	{
-		try
-	      {
-	         FileInputStream fileIn = new FileInputStream(fileSaveName);
-	         ObjectInputStream in = new ObjectInputStream(fileIn);
-	         companyList = (ArrayList <Company>) in.readObject();
-	         in.close();
-	         fileIn.close();
-	         return true;
-	      }
-			catch(FileNotFoundException f)
-			{
-				System.out.println ("Attempt load but could not find file");				
-				return false;
-			}
-			catch(IOException i)
-	      {
-	         i.printStackTrace();
-	         return false;
-	      }catch(ClassNotFoundException c)
-	      {
-	         System.out.println("Company class not found");
-	         c.printStackTrace();
-	         return false;
-	      }
+	private boolean loadData() {
+		try {
+			FileInputStream fileIn = new FileInputStream(fileSaveName);
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			companyList = (ArrayList<Company>) in.readObject();
+			in.close();
+			fileIn.close();
+			return true;
+		} catch (FileNotFoundException f) {
+			System.out.println("Attempt load but could not find file");
+			return false;
+		} catch (IOException i) {
+			i.printStackTrace();
+			return false;
+		} catch (ClassNotFoundException c) {
+			System.out.println("Company class not found");
+			c.printStackTrace();
+			return false;
+		}
 	}
-	
-	//Check made-in-nyc site and pulls out the body of links
-	private Elements parseHiring()
-	{
+
+	// Check made-in-nyc site and pulls out the body of links
+	private Elements parseHiring() {
 		Document doc = null;
 		try {
 			doc = Jsoup.connect(html).timeout(0).get();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			System.out.println ("Made In NYC Site is down.");
+			System.out.println("Made In NYC Site is down.");
 			e.printStackTrace();
 		}
 		Element body = doc.body();
-		//Find the article tag
+		// Find the article tag
 		Element article = body.getElementsByTag("article").first();
-		return article.children();	 
+		return article.children();
 	}
-	
-	//Takes the list of links of companies in place from website.  Then gets only the ones hiring.
-	private void parseCompanies()
-	{
+
+	// Takes the list of links of companies in place from website. Then gets
+	// only the ones hiring.
+	private void parseCompanies() {
 		Elements links = companiesHiring.select("li");
-		Elements hiringLinks = links.select("li:contains(hiring)");	
+		Elements hiringLinks = links.select("li:contains(hiring)");
 		companiesHiring = hiringLinks;
 
 		hiringLinks = companiesHiring.select(":contains(hiring)");
 		ListIterator<Element> iterator = hiringLinks.listIterator();
-		
-		//skip first item (and every other item) because it is a node containing main website and hiring links
+
+		// skip first item (and every other item) because it is a node
+		// containing main website and hiring links
 		Element check = null;
-		
-		while (iterator.hasNext()){
-			String jobText= iterator.next().text().replaceAll("\\(hiring\\)","");
-			check = (iterator.hasNext())?iterator.next():check;
-			
+
+		if (debug) {
+			int count = 0;
+			while (iterator.hasNext() && count < 10) {
+				count++;
+				String jobText = iterator.next().text()
+						.replaceAll("\\(hiring\\)", "");
+				check = (iterator.hasNext()) ? iterator.next() : check;
+
+				String link = getLink(check);
+				if (ScraperHelper.checkLinkStatus(link))
+					iterator.remove();
+				else {
+					check.text(jobText);
+					// System.out.println ("Adding " + jobText + " at " + link);
+					companyList.add(new Company(link, jobText));
+				}
+			}
+			saveData();
+			return;
+		}
+
+		while (iterator.hasNext()) {
+			String jobText = iterator.next().text()
+					.replaceAll("\\(hiring\\)", "");
+			check = (iterator.hasNext()) ? iterator.next() : check;
+
 			String link = getLink(check);
-			if (checkLinkStatus(link))
+			if (ScraperHelper.checkLinkStatus(link))
 				iterator.remove();
-			else
-			{
+			else {
 				check.text(jobText);
-				//System.out.println ("Adding " + jobText + " at " + link);
-				companyList.add(new Company (link,jobText));
+				// System.out.println ("Adding " + jobText + " at " + link);
+				companyList.add(new Company(link, jobText));
 			}
 		}
 		saveData();
 	}
-	
-	//Prints out the companylist
-	public void outputCompanyList()
-	{
-		for (Company c: companyList)
-		{
+
+	// Prints out the companylist
+	public void outputCompanyList() {
+		for (Company c : companyList) {
 			System.out.print("<li>");
-			System.out.print ("<a href=\""+c.getJobUrl()+"\" target=\"_blank\">" + 
-			c.getName()+ "</a>");
-			System.out.println ("</li>");
+			System.out.print("<a href=\"" + c.getJobUrl()
+					+ "\" target=\"_blank\">" + c.getName() + "</a>");
+			System.out.println("</li>");
 		}
 	}
-	
-	//Get the url out of an element
-	private String getLink(Element linkElement)
-	{
-		try{
-		return (linkElement.select("a").first()).attr("abs:href");
-		}
-		catch (Exception e)
-		{
+
+	// Get the url out of an element
+	private String getLink(Element linkElement) {
+		try {
+			return (linkElement.select("a").first()).attr("abs:href");
+		} catch (Exception e) {
 			return null;
 		}
 	}
-	
-	//Check if a URL returns a 404
-	private boolean checkLinkStatus(String link)
-	{
-		try {
-			Jsoup.connect(link).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21").timeout(10000).ignoreHttpErrors(true).execute();
-		}
-		catch(UnknownHostException exception)
-		{
-			System.out.println ("Unknown Host Exception for " + link);
-			return (true);
-		}
-		catch (SSLHandshakeException exception2)
-		{
-			System.out.println ("SSLHandshakeException for " + link);
-			return (true);
-		}
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			System.out.println ("Some other failure for " + link);
-			return(true);
-		} 
-		return (false);
-	}
-		
+
 	public static void main(String[] args) {
 		MadeInNYC search = new MadeInNYC();
-		System.out.println ("Completed");
-		//search.outputCompanyList();
+		System.out.println("Completed");
 	}
 }
