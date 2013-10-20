@@ -1,14 +1,5 @@
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.UnknownHostException;
 import java.util.Date;
-
 import javafx.beans.property.SimpleStringProperty;
-
-import javax.net.ssl.SSLHandshakeException;
-
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 
 public class ObsCompany{
 	/**
@@ -16,12 +7,15 @@ public class ObsCompany{
 	 */
 	private SimpleStringProperty jobUrl;
 	private SimpleStringProperty name;
+	private SimpleStringProperty notes;
+	
 	public Date lastChecked;
 	
 	public ObsCompany(Company c)
 	{
 		name = new SimpleStringProperty(c.getName());
 		jobUrl = new SimpleStringProperty (c.getJobUrl());
+		notes = (new SimpleStringProperty (c.getNotes()));
 		lastChecked = new Date();
 	}
 
@@ -29,36 +23,36 @@ public class ObsCompany{
 	{
 		return name.get();
 	}
+	public void setName(String str)
+	{
+		name.set(str);
+	}
 	public String getJobUrl()
 	{
 		return jobUrl.get();
 	}
+	public void setJobUrl(String str)
+	{
+		jobUrl.set(str);
+	}
 	
 	public Company getCompany()
 	{
-		return new Company(name.get(),jobUrl.get());
+		Company c = new Company(jobUrl.get(),name.get());
+		c.setNotes(notes.get());
+		return c;
 	}
 	
 	public boolean stillActive()
 	{
-		try {
-			Jsoup.connect(jobUrl.get()).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21").timeout(10000).ignoreHttpErrors(true).execute();
-		}
-		catch(UnknownHostException exception)
-		{
-			System.out.println ("Unknown Host Exception for " + jobUrl);
-			return (true);
-		}
-		catch (SSLHandshakeException exception2)
-		{
-			System.out.println ("SSLHandshakeException for " + jobUrl);
-			return (true);
-		}
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			System.out.println ("Some other failure for " + jobUrl);
-			return(true);
-		} 
-		return (false);
+		return ScraperHelper.checkLinkStatus(name.get());
+	}
+
+	public String getNotes() {
+		return notes.get();
+	}
+
+	public void setNotes(String str) {
+		notes.set(str);
 	}
 }

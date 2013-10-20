@@ -17,6 +17,7 @@ public class Company implements Serializable{
 		name = companyName;
 		jobUrl = setJob;
 		lastChecked = new Date();
+		notes =" ";
 	}
 
 	public String getName()
@@ -47,5 +48,8 @@ public class Company implements Serializable{
 
 	public void setRank(int rank) {
 		this.rank = rank;
+		if (rank<0)
+			this.rank = 0;
+		if (rank>5)this.rank = 5;
 	}
 }

@@ -1,4 +1,6 @@
+import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,4 +60,17 @@ public class ScraperHelper {
 		}
 		return cList;
 	}
+	
+	public static void openUrl(String link)
+	{
+		 Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+		    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+		        try {
+		            desktop.browse((new URL(link)).toURI());
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        }
+		    }
+	}	
+
 }
