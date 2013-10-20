@@ -22,7 +22,7 @@ public class MadeInNYC {
 	public MadeInNYC() {
 		companyList = new ArrayList<Company>();
 		if (loadData()) {
-			outputCompanyList();
+			//outputCompanyList();
 		}
 		// populate companiesHiring with latest Made in NYC values
 		else {
@@ -32,7 +32,7 @@ public class MadeInNYC {
 	}
 
 	// Try to delete file
-	public void delete() {
+	public void deleteData() {
 		try {
 			File file = new File(fileSaveName);
 			if (file.exists()) {
