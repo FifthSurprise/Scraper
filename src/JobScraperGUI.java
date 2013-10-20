@@ -40,12 +40,7 @@ public class JobScraperGUI extends Application {
 
 		table.setEditable(true);
 
-		TableColumn companyNameCol = new TableColumn("Company");
-		companyNameCol.setMinWidth(100);
-		companyNameCol
-				.setCellValueFactory(new PropertyValueFactory<ObsCompany, String>(
-						"name"));
-		companyNameCol.setCellFactory(TextFieldTableCell.forTableColumn());
+		TableColumn companyNameCol = createTextCol("Company", "name", 100);
 		companyNameCol
 				.setOnEditCommit(new EventHandler<CellEditEvent<ObsCompany, String>>() {
 					@Override
@@ -56,14 +51,7 @@ public class JobScraperGUI extends Application {
 					}
 				});
 
-		TableColumn urlNameCol = new TableColumn("URL");
-		urlNameCol.setEditable(true);
-		urlNameCol.setMinWidth(100);
-		urlNameCol
-				.setCellValueFactory(new PropertyValueFactory<ObsCompany, String>(
-						"jobUrl"));
-		urlNameCol.setCellFactory(TextFieldTableCell.forTableColumn());
-
+		TableColumn urlNameCol = createTextCol("URL", "jobUrl", 50);
 		urlNameCol
 				.setOnEditCommit(new EventHandler<CellEditEvent<ObsCompany, String>>() {
 					@Override
@@ -74,11 +62,7 @@ public class JobScraperGUI extends Application {
 					}
 				});
 
-		TableColumn notesCol = new TableColumn("Notes");
-		notesCol.setMinWidth(400);
-		notesCol.setCellValueFactory(new PropertyValueFactory<ObsCompany, String>(
-				"notes"));
-		notesCol.setCellFactory(TextFieldTableCell.forTableColumn());
+		TableColumn notesCol = createTextCol("Notes", "notes", 400);
 		notesCol.setOnEditCommit(new EventHandler<CellEditEvent<ObsCompany, String>>() {
 			@Override
 			public void handle(CellEditEvent<ObsCompany, String> t) {
@@ -107,13 +91,16 @@ public class JobScraperGUI extends Application {
 					@Override
 					public void updateItem(final ObsCompany obs, boolean empty) {
 						super.updateItem(obs, empty);
-						setGraphic(button);
-						button.setOnAction(new EventHandler<ActionEvent>() {
-							@Override
-							public void handle(ActionEvent event) {
-								ScraperHelper.openUrl(obs.getJobUrl());
-							}
-						});
+						if (obs != null) {
+							setGraphic(button);
+							button.setOnAction(new EventHandler<ActionEvent>() {
+								@Override
+								public void handle(ActionEvent event) {
+									ScraperHelper.openUrl(obs.getJobUrl());
+								}
+							});
+						} else
+							setGraphic(null);
 
 					}
 				};
@@ -139,21 +126,25 @@ public class JobScraperGUI extends Application {
 					@Override
 					public void updateItem(final ObsCompany obs, boolean empty) {
 						super.updateItem(obs, empty);
-						setGraphic(button);
-						button.setOnAction(new EventHandler<ActionEvent>() {
-							@Override
-							public void handle(ActionEvent event) {
-								data.remove(getTableRow().getIndex());
-							}
-						});
+						if (obs != null) {
+							setGraphic(button);
+
+							button.setOnAction(new EventHandler<ActionEvent>() {
+								@Override
+								public void handle(ActionEvent event) {
+									data.remove(getTableRow().getIndex());
+								}
+							});
+						} else
+							setGraphic(null);
 					}
 				};
 			}
 		});
 
 		table.setItems(data);
-		table.getColumns()
-				.addAll(companyNameCol, linkCol, urlNameCol, remCol, notesCol);
+		table.getColumns().addAll(companyNameCol, linkCol, urlNameCol, remCol,
+				notesCol);
 
 		Button save = new Button("Save");
 		save.setOnAction(new EventHandler<ActionEvent>() {
@@ -176,7 +167,7 @@ public class JobScraperGUI extends Application {
 		vbox.setSpacing(5);
 		vbox.setPadding(new Insets(10, 10, 10, 10));
 
-		//main button list
+		// main button list
 		final HBox hbox = new HBox();
 		hbox.setSpacing(5);
 		hbox.setPadding(new Insets(10, 10, 10, 10));
@@ -187,5 +178,16 @@ public class JobScraperGUI extends Application {
 
 		stage.setScene(new Scene(vbox));
 		stage.show();
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	public TableColumn createTextCol(String header, String value, int size) {
+		TableColumn col = new TableColumn(header);
+		col.setEditable(true);
+		col.setMinWidth(size);
+		col.setCellValueFactory(new PropertyValueFactory<ObsCompany, String>(
+				value));
+		col.setCellFactory(TextFieldTableCell.forTableColumn());
+		return col;
 	}
 }

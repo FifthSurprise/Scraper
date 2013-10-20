@@ -17,7 +17,7 @@ public class Company implements Serializable{
 		name = companyName;
 		jobUrl = setJob;
 		lastChecked = new Date();
-		notes =" ";
+		
 	}
 
 	public String getName()

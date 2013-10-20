@@ -8,9 +8,9 @@ import org.jsoup.select.Elements;
 
 public class MadeInNYC {
 
-	public boolean debug = false;
+	public boolean debug = true;
 	private static String html = "http://nytm.org/made-in-nyc/";
-	public Elements companiesHiring;
+	private Elements companiesHiring;
 	public ArrayList<Company> companyList;
 	private String fileSaveName = "./companies.ser";
 		
@@ -149,7 +149,6 @@ public class MadeInNYC {
 				iterator.remove();
 			else {
 				check.text(jobText);
-				// System.out.println ("Adding " + jobText + " at " + link);
 				companyList.add(new Company(link, jobText));
 			}
 		}
