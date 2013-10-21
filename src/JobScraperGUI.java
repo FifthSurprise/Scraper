@@ -1,3 +1,4 @@
+import java.util.Date;
 import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
@@ -11,9 +12,7 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -71,7 +70,19 @@ public class JobScraperGUI extends Application {
 						.getNewValue());
 			}
 		});
-
+		
+		TableColumn dateCol =new TableColumn("Last Checked"); 
+		dateCol.setEditable(false);
+		dateCol.setMinWidth(100);
+		dateCol.setCellValueFactory(new PropertyValueFactory<ObsCompany,Date>("lastChecked"));
+		dateCol.setCellValueFactory(new Callback<CellDataFeatures<ObsCompany, Date>, ObservableValue<Date>>() {
+			@Override
+			public ObservableValue<Date> call(
+					CellDataFeatures<ObsCompany, Date> features) {
+				return new ReadOnlyObjectWrapper(features.getValue().getDate());
+			}
+		});
+		
 		TableColumn<ObsCompany, ObsCompany> linkCol = new TableColumn<>("Links");
 		linkCol.setMinWidth(50);
 		linkCol.setCellValueFactory(new Callback<CellDataFeatures<ObsCompany, ObsCompany>, ObservableValue<ObsCompany>>() {
@@ -97,11 +108,11 @@ public class JobScraperGUI extends Application {
 								@Override
 								public void handle(ActionEvent event) {
 									ScraperHelper.openUrl(obs.getJobUrl());
+									obs.setDate();
 								}
 							});
 						} else
 							setGraphic(null);
-
 					}
 				};
 			}
@@ -141,9 +152,9 @@ public class JobScraperGUI extends Application {
 				};
 			}
 		});
-
+			
 		table.setItems(data);
-		table.getColumns().addAll(companyNameCol, linkCol, urlNameCol, remCol,
+		table.getColumns().addAll(companyNameCol, linkCol,dateCol, urlNameCol, remCol,
 				notesCol);
 
 		Button save = new Button("Save");
@@ -151,6 +162,7 @@ public class JobScraperGUI extends Application {
 			@Override
 			public void handle(ActionEvent e) {
 				source.companyList = ScraperHelper.getCompanyList(data);
+				System.out.println(source.companyList.get(0).getNotes());
 				source.saveData();
 			}
 		});

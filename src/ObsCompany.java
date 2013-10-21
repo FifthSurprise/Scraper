@@ -1,6 +1,8 @@
 import java.util.Date;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 public class ObsCompany {
@@ -11,15 +13,16 @@ public class ObsCompany {
 	private SimpleStringProperty name;
 	private SimpleStringProperty notes;
 	private SimpleIntegerProperty rank;
-
-	public Date lastChecked;
+	private SimpleBooleanProperty applied;
+	private SimpleObjectProperty<Date> lastChecked;
 
 	public ObsCompany(Company c) {
 		name = new SimpleStringProperty(c.getName());
 		jobUrl = new SimpleStringProperty(c.getJobUrl());
 		notes = (new SimpleStringProperty(c.getNotes()));
-		lastChecked = new Date();
+		lastChecked = new SimpleObjectProperty<Date>(c.getDate());
 		rank = new SimpleIntegerProperty(c.getRank());
+		applied = new SimpleBooleanProperty(c.isApplied());
 	}
 
 	public String getName() {
@@ -35,9 +38,11 @@ public class ObsCompany {
 		jobUrl.set(str);
 	}
 
+	//Converts the ObservableCompany into a normal company for serialization
 	public Company getCompany() {
 		Company c = new Company(jobUrl.get(), name.get());
-		c.setNotes(notes.get());
+		c.setNotes(getNotes());
+		c.setDate(lastChecked.getValue());
 		return c;
 	}
 
@@ -59,5 +64,21 @@ public class ObsCompany {
 
 	public void setRank(int r) {
 		rank.set(r);
+	}
+	public void setApplied(boolean a) {
+		applied.set(a);
+	}
+	public boolean isApplied() {
+		return applied.get();
+	}
+	
+	public Date getDate()
+	{
+		return lastChecked.getValue();
+	}
+	public void setDate()
+	{
+		Date d = new Date();
+		lastChecked = new SimpleObjectProperty<Date>(d);
 	}
 }

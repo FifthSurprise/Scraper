@@ -8,7 +8,7 @@ import org.jsoup.select.Elements;
 
 public class MadeInNYC {
 
-	public boolean debug = true;
+	public boolean debug = false;
 	private static String html = "http://nytm.org/made-in-nyc/";
 	private Elements companiesHiring;
 	public ArrayList<Company> companyList;

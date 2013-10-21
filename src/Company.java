@@ -10,14 +10,15 @@ public class Company implements Serializable{
 	private String name;
 	private String notes;
 	private int rank;
+	private boolean applied;
 	public Date lastChecked;
 	
 	public Company(String setJob, String companyName)
 	{
 		name = companyName;
 		jobUrl = setJob;
-		lastChecked = new Date();
 		
+		notes = "";
 	}
 
 	public String getName()
@@ -38,8 +39,8 @@ public class Company implements Serializable{
 		return notes;
 	}
 
-	public void setNotes(String notes) {
-		this.notes = notes;
+	public void setNotes(String n) {
+		this.notes = n;
 	}
 
 	public int getRank() {
@@ -51,5 +52,28 @@ public class Company implements Serializable{
 		if (rank<0)
 			this.rank = 0;
 		if (rank>5)this.rank = 5;
+	}
+
+	/**
+	 * @return the applied
+	 */
+	public boolean isApplied() {
+		return applied;
+	}
+
+	/**
+	 * @param applied the applied to set
+	 */
+	public void setApplied(boolean applied) {
+		this.applied = applied;
+	}
+	public Date getDate()
+	{
+		return lastChecked;
+	}
+	
+	public void setDate(Date d)
+	{
+		lastChecked = d;
 	}
 }
