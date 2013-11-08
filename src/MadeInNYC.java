@@ -1,29 +1,46 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.ListIterator;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class MadeInNYC {
 
-	public boolean debug = false;
+	public boolean debug = true;
 	private static String html = "http://nytm.org/made-in-nyc/";
 	private Elements companiesHiring;
 	public ArrayList<Company> companyList;
-	private String fileSaveName = "./companies.ser";
+	private String fileSaveName = "./companies.xml";
 		
 	public MadeInNYC() {
 		//path  = ClassLoader.getResource(fileSaveName);
 		companyList = new ArrayList<Company>();
-		if (loadData()) {
-			if (debug)outputCompanyList();
-		}
-		// populate companiesHiring with latest Made in NYC values
-		else {
-			companiesHiring = parseHiring();
-			parseCompanies();
+		try {
+			if (loadData()) {
+				//if (debug)outputCompanyList();
+			}
+			// populate companiesHiring with latest Made in NYC values
+			else {
+				companiesHiring = parseHiring();
+				parseCompanies();
+			}
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -43,51 +60,48 @@ public class MadeInNYC {
 		}
 	}
 
-	// Saves the list of companies to a serialized file
-	public void saveData() {
-		File output = new File(fileSaveName);
-		try {
-			output.createNewFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	// Saves the list of companies to an xml
+	public void saveData() throws ParserConfigurationException, TransformerException {
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+		org.w3c.dom.Document doc = docBuilder.newDocument();
+		org.w3c.dom.Element rootElement = doc.createElement("companylist");
+		doc.appendChild(rootElement);
 
-		try {
-			FileOutputStream fileOut = new FileOutputStream(output);
-
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(companyList);
-			out.close();
-			fileOut.close();
-			System.out.println("Saved data in: " + fileSaveName);
-		} catch (IOException i) {
-			i.printStackTrace();
-		}
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		DOMSource source = new DOMSource(doc);
+		StreamResult result = new StreamResult(new File(fileSaveName));
+		transformer.transform(source, result);
+		System.out.println ("Successfully Saved XML");
 	}
 
-	// Attempts to load data from a serialized file. If failure, generates file
-	@SuppressWarnings("unchecked")
-	private boolean loadData() {
+	private boolean loadData() throws ParserConfigurationException, SAXException, IOException
+	{
 		try {
-			FileInputStream fileIn = new FileInputStream(fileSaveName);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			companyList = (ArrayList<Company>) in.readObject();
-			in.close();
-			fileIn.close();
-			return true;
-		} catch (FileNotFoundException f) {
+		File fXmlFile = new File(fileSaveName);
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		org.w3c.dom.Document doc = dBuilder.parse(fXmlFile);
+		doc.getDocumentElement().normalize();
+		NodeList list = doc.getElementsByTagName("company");
+		companyList = new ArrayList<Company>();
+		for (int i =0; i<list.getLength();i++)
+		{
+			org.w3c.dom.Element elem = (org.w3c.dom.Element) list.item(i);
+			companyList.add(new Company(elem,doc));
+		}
+		return true;
+		}
+		catch (FileNotFoundException f) {
 			System.out.println("Attempt load but could not find file");
 			return false;
 		} catch (IOException i) {
 			i.printStackTrace();
 			return false;
-		} catch (ClassNotFoundException c) {
-			System.out.println("Company class not found");
-			c.printStackTrace();
-			return false;
 		}
 	}
-
+	
 	// Check made-in-nyc site and pulls out the body of links
 	private Elements parseHiring() {
 		Document doc = null;
@@ -131,11 +145,18 @@ public class MadeInNYC {
 					iterator.remove();
 				else {
 					check.text(jobText);
-					// System.out.println ("Adding " + jobText + " at " + link);
 					companyList.add(new Company(link, jobText));
 				}
 			}
-			saveData();
+			try {
+				saveData();
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TransformerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			return;
 		}
 
@@ -152,7 +173,15 @@ public class MadeInNYC {
 				companyList.add(new Company(link, jobText));
 			}
 		}
-		saveData();
+		try {
+			saveData();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	// Prints out the companylist

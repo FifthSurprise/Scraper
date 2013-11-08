@@ -1,4 +1,8 @@
 import java.util.Date;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
@@ -162,8 +166,15 @@ public class JobScraperGUI extends Application {
 			@Override
 			public void handle(ActionEvent e) {
 				source.companyList = ScraperHelper.getCompanyList(data);
-				System.out.println(source.companyList.get(0).getNotes());
-				source.saveData();
+				try {
+					source.saveData();
+				} catch (ParserConfigurationException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (TransformerException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		});
 
