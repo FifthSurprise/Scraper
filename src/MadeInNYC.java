@@ -15,12 +15,13 @@ import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class MadeInNYC {
 
-	public boolean debug = true;
+	public boolean debug = false;
 	private static String html = "http://nytm.org/made-in-nyc/";
 	private Elements companiesHiring;
 	public ArrayList<Company> companyList;
@@ -31,7 +32,7 @@ public class MadeInNYC {
 		companyList = new ArrayList<Company>();
 		try {
 			if (loadData()) {
-				//if (debug)outputCompanyList();
+				if (debug)outputCompanyList();
 			}
 			// populate companiesHiring with latest Made in NYC values
 			else {
@@ -66,7 +67,13 @@ public class MadeInNYC {
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		org.w3c.dom.Document doc = docBuilder.newDocument();
 		org.w3c.dom.Element rootElement = doc.createElement("companylist");
+		
+		for (int i =0; i<companyList.size();i++)
+		{
+			rootElement.appendChild((Node)companyList.get(i).exportXMLNode(doc));
+		}
 		doc.appendChild(rootElement);
+		System.out.println (rootElement.getFirstChild());
 
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
@@ -108,7 +115,6 @@ public class MadeInNYC {
 		try {
 			doc = Jsoup.connect(html).timeout(0).get();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Made In NYC Site is down.");
 			e.printStackTrace();
 		}
@@ -148,15 +154,14 @@ public class MadeInNYC {
 					companyList.add(new Company(link, jobText));
 				}
 			}
-			try {
-				saveData();
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TransformerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+				try {
+					saveData();
+				} catch (ParserConfigurationException | TransformerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 			return;
 		}
 
@@ -173,15 +178,12 @@ public class MadeInNYC {
 				companyList.add(new Company(link, jobText));
 			}
 		}
-		try {
-			saveData();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransformerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			try {
+				saveData();
+			} catch (ParserConfigurationException | TransformerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	}
 
 	// Prints out the companylist
